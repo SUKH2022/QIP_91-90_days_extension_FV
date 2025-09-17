@@ -559,16 +559,12 @@ ETL_DATES: PASSED - ETL dates valid: Started 11-Sep-2025 11:31:51 PM before Comp
 
 === Standard Report Column Tests ===
 
-STANDARD 1: FAILED - Standard 1 column differences found
-  • Column 7: Space difference (extra/missing spaces) - Design='Case Owner  First Name' vs Verification='Case Owner First Name'
-  • Column 32: Space difference (extra/missing spaces) - Design='7 Day Private Visit Contact Log Start Date - 
-Approved Departure' vs Verification='7 Day Private Visit Contact Log Start Date - Approved Departure'
+STANDARD 1: PASSED - Standard 1 columns match perfectly
 
 
 STANDARD 2: FAILED - Standard 2 column differences found
-  • Column 7: Space difference (extra/missing spaces) - Design='Case Owner  First Name' vs Verification='Case Owner First Name'     
   • Column 20: Spelling error (similarity: 0.98) - Design='Case Closure Submsission Date' vs Verification='Case Closure Submission Date'
-  • Column 33: Content difference - Design='30 Day Private Visit Contact Log Start Date -
+  • Column 33: Content difference - Design='30 Day Private Visit Contact Log Start Date - 
 Director Approval Received' vs Verification='30 Day Private Visit Contact Log Start Date - Regular - 2025'
   • Column 34: Spelling error (similarity: 0.83) - Design='30 Day Private Visit Contact Log Start Date - Regular - 2025' vs Verification='30 Day Private Visit Contact Log Method - Regular'
   • Column 35: Spelling error (similarity: 0.90) - Design='30 Day Private Visit Contact Log Method - Regular' vs Verification='30 Day Private Visit Contact Log Location - Regular'
@@ -579,7 +575,7 @@ Director Approval Received' vs Verification='30 Day Private Visit Contact Log St
 
 
 STANDARD 3: FAILED - Standard 3 column differences found
-  • Column 7: Space difference (extra/missing spaces) - Design='Case Owner  First Name' vs Verification='Case Owner First Name'     
+  • Column 7: Space difference (extra/missing spaces) - Design='Case Owner  First Name' vs Verification='Case Owner First Name'
   • Column 20: Spelling error (similarity: 0.98) - Design='Case Closure Submsission Date' vs Verification='Case Closure Submission Date'
   • Column 33: Content difference - Design='30 Day Private Visit Contact Log Start Date - Director Approval Received' vs Verification='90 Day Visit Contact Log Start Date - Regular - 2025'
   • Column 34: Content difference - Design='90 Day Visit Contact Log Start Date - Regular - 2025' vs Verification='90 Day Visit Exclusion - Closed Prior to Due Date'
@@ -623,19 +619,7 @@ Cover Page Errors:
 
 Standard Report Errors:
 
-Standard 1:
-  • Column 7: Space difference (extra/missing spaces)
-    Design: 'Case Owner  First Name'
-    Verification: 'Case Owner First Name'
-  • Column 32: Space difference (extra/missing spaces)
-    Design: '7 Day Private Visit Contact Log Start Date -
-Approved Departure'
-    Verification: '7 Day Private Visit Contact Log Start Date - Approved Departure'
-
 Standard 2:
-  • Column 7: Space difference (extra/missing spaces)
-    Design: 'Case Owner  First Name'
-    Verification: 'Case Owner First Name'
   • Column 20: Spelling error (similarity: 0.98)
     Design: 'Case Closure Submsission Date'
     Verification: 'Case Closure Submission Date'
