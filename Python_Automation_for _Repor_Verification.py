@@ -544,3 +544,149 @@ if __name__ == "__main__":
     else:
         # Run all tests
         run_all_cq091_tests(design_spec_path, verification_path, expected_version)
+
+'''
+Running CQ091 verification tests
+Design Spec: D:\work\college_work\Coop_1\ops_work\report2\CQ091 - Design Spec - QIP9.KS2 - Seven Day Visit 2025.xlsx
+Verification Report: D:\work\college_work\Coop_1\ops_work\report2\Final verification-CQ091 - QIP 9, 11 - KS2 - Private Visits - Kinship Service_Children in Care.xlsx
+Expected version: 1.3
+================================================================================
+
+=== Cover Page Tests ===
+TITLE_SPELLING: PASSED - Title spelled correctly: 'CQ091 - QIP 9, 11 - KS2 - Kinship Service/Child in Care'
+VERSION: FAILED - Version mismatch. Expected: 1.3, Found: 1.20
+ETL_DATES: PASSED - ETL dates valid: Started 11-Sep-2025 11:31:51 PM before Completed 12-Sep-2025 07:30:33 AM
+
+=== Standard Report Column Tests ===
+
+STANDARD 1: FAILED - Standard 1 column differences found
+  • Column 7: Space difference (extra/missing spaces) - Design='Case Owner  First Name' vs Verification='Case Owner First Name'
+  • Column 32: Space difference (extra/missing spaces) - Design='7 Day Private Visit Contact Log Start Date - 
+Approved Departure' vs Verification='7 Day Private Visit Contact Log Start Date - Approved Departure'
+
+
+STANDARD 2: FAILED - Standard 2 column differences found
+  • Column 7: Space difference (extra/missing spaces) - Design='Case Owner  First Name' vs Verification='Case Owner First Name'     
+  • Column 20: Spelling error (similarity: 0.98) - Design='Case Closure Submsission Date' vs Verification='Case Closure Submission Date'
+  • Column 33: Content difference - Design='30 Day Private Visit Contact Log Start Date -
+Director Approval Received' vs Verification='30 Day Private Visit Contact Log Start Date - Regular - 2025'
+  • Column 34: Spelling error (similarity: 0.83) - Design='30 Day Private Visit Contact Log Start Date - Regular - 2025' vs Verification='30 Day Private Visit Contact Log Method - Regular'
+  • Column 35: Spelling error (similarity: 0.90) - Design='30 Day Private Visit Contact Log Method - Regular' vs Verification='30 Day Private Visit Contact Log Location - Regular'
+  • Column 36: Content difference - Design='30 Day Private Visit Contact Log Location - Regular' vs Verification='30 Day Private Visit Exclusion - Closed Prior to Due Date'
+  • Column 37: Content difference - Design='30 Day Private Visit Exclusion - Closed Prior to Due Date' vs Verification='30 Day Private Visit Compliant'
+  • Column 38: Content difference - Design='30 Day Private Visit Compliant' vs Verification='Incorrect Change Reason'
+  • Column count mismatch: Design=39, Verification=38
+
+
+STANDARD 3: FAILED - Standard 3 column differences found
+  • Column 7: Space difference (extra/missing spaces) - Design='Case Owner  First Name' vs Verification='Case Owner First Name'     
+  • Column 20: Spelling error (similarity: 0.98) - Design='Case Closure Submsission Date' vs Verification='Case Closure Submission Date'
+  • Column 33: Content difference - Design='30 Day Private Visit Contact Log Start Date - Director Approval Received' vs Verification='90 Day Visit Contact Log Start Date - Regular - 2025'
+  • Column 34: Content difference - Design='90 Day Visit Contact Log Start Date - Regular - 2025' vs Verification='90 Day Visit Exclusion - Closed Prior to Due Date'
+  • Column 35: Content difference - Design='90 Day Visit Exclusion - Closed Prior to Due Date' vs Verification='90 Day Visit Compliant'
+  • Column 36: Content difference - Design='90 Day Visit Compliant' vs Verification='Incorrect Change Reason'
+  • Column count mismatch: Design=37, Verification=36
+
+
+=== Specific Cases Test (Standard 2 Report) ===
+SPECIFIC_CASES: FAILED - Some cases missing dates
+
+  Case Details:
+  • Case 12891050: Due Date=2025-01-13, Contact Log Date=NaT
+  • Case 12891050: Due Date=2025-02-12, Contact Log Date=NaT
+  • Case 12891050: Due Date=2025-03-14, Contact Log Date=NaT
+  • Case 12891050: Due Date=2025-04-13, Contact Log Date=2025-04-01
+  • Case 13141575: Due Date=2025-01-15, Contact Log Date=2025-01-01
+  • Case 11739608: Due Date=2025-01-06, Contact Log Date=2024-12-27
+  • Case 13038729: Due Date=2025-01-02, Contact Log Date=2024-12-25
+  • Case 13155126: Due Date=2025-01-03, Contact Log Date=2024-12-25
+
+=== Summary Report Test ===
+SUMMARY: PASSED - Summary report fields match perfectly
+
+=== Sensitivity and Formula Tests ===
+SENSITIVITY: PASSED - Sensitivity: high (as required)
+FORMULA: PASSED - Business formula verified: '90 Day Visit Due Date' - 'Contact Log Buffer Days' <= Minimum Contact Log Start Date <= '90 Day Visit Due Date'
+
+=== Contact Log Requirements Test ===
+CONTACT_LOG: PASSED - Contact log requirements verified:
+{'report_field_name': '90 Day Private Visit Contact Log Start Date - Extension', 'type': 'Supervision', 'purpose_options': ['Extension of Visit - 30 Day - Private', 'Extension of Visit - 90 Day - Private'], 'concerning': 'Primary Client'}
+
+================================================================================
+=== FINAL RESULT ===
+SOME CQ091 TESTS FAILED
+
+=== DETAILED ERROR ANALYSIS ===
+
+Cover Page Errors:
+  • version: Version mismatch. Expected: 1.3, Found: 1.20
+
+Standard Report Errors:
+
+Standard 1:
+  • Column 7: Space difference (extra/missing spaces)
+    Design: 'Case Owner  First Name'
+    Verification: 'Case Owner First Name'
+  • Column 32: Space difference (extra/missing spaces)
+    Design: '7 Day Private Visit Contact Log Start Date -
+Approved Departure'
+    Verification: '7 Day Private Visit Contact Log Start Date - Approved Departure'
+
+Standard 2:
+  • Column 7: Space difference (extra/missing spaces)
+    Design: 'Case Owner  First Name'
+    Verification: 'Case Owner First Name'
+  • Column 20: Spelling error (similarity: 0.98)
+    Design: 'Case Closure Submsission Date'
+    Verification: 'Case Closure Submission Date'
+  • Column 33: Content difference
+    Design: '30 Day Private Visit Contact Log Start Date -
+Director Approval Received'
+    Verification: '30 Day Private Visit Contact Log Start Date - Regular - 2025'
+  • Column 34: Spelling error (similarity: 0.83)
+    Design: '30 Day Private Visit Contact Log Start Date - Regular - 2025'
+    Verification: '30 Day Private Visit Contact Log Method - Regular'
+  • Column 35: Spelling error (similarity: 0.90)
+    Design: '30 Day Private Visit Contact Log Method - Regular'
+    Verification: '30 Day Private Visit Contact Log Location - Regular'
+  • Column 36: Content difference
+    Design: '30 Day Private Visit Contact Log Location - Regular'
+    Verification: '30 Day Private Visit Exclusion - Closed Prior to Due Date'
+  • Column 37: Content difference
+    Design: '30 Day Private Visit Exclusion - Closed Prior to Due Date'
+    Verification: '30 Day Private Visit Compliant'
+  • Column 38: Content difference
+    Design: '30 Day Private Visit Compliant'
+    Verification: 'Incorrect Change Reason'
+  • Column N/A: Column count mismatch
+    Design: 'Total columns: 39'
+    Verification: 'Total columns: 38'
+
+Standard 3:
+  • Column 7: Space difference (extra/missing spaces)
+    Design: 'Case Owner  First Name'
+    Verification: 'Case Owner First Name'
+  • Column 20: Spelling error (similarity: 0.98)
+    Design: 'Case Closure Submsission Date'
+    Verification: 'Case Closure Submission Date'
+  • Column 33: Content difference
+    Design: '30 Day Private Visit Contact Log Start Date - Director Approval Received'
+    Verification: '90 Day Visit Contact Log Start Date - Regular - 2025'
+  • Column 34: Content difference
+    Design: '90 Day Visit Contact Log Start Date - Regular - 2025'
+    Verification: '90 Day Visit Exclusion - Closed Prior to Due Date'
+  • Column 35: Content difference
+    Design: '90 Day Visit Exclusion - Closed Prior to Due Date'
+    Verification: '90 Day Visit Compliant'
+  • Column 36: Content difference
+    Design: '90 Day Visit Compliant'
+    Verification: 'Incorrect Change Reason'
+  • Column N/A: Column count mismatch
+    Design: 'Total columns: 37'
+    Verification: 'Total columns: 36'
+
+Specific Cases Errors:
+  • Case 12891050: Missing Due Date=False, Missing Contact Log Date=True
+  • Case 12891050: Missing Due Date=False, Missing Contact Log Date=True
+  • Case 12891050: Missing Due Date=False, Missing Contact Log Date=True
+'''
