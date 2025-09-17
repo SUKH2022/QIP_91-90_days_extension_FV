@@ -51,12 +51,14 @@ def test_cover_page(report_path, expected_version):
     except Exception as e:
         return {
             'title_spelling': {'passed': False, 'message': f"Error reading cover page: {str(e)}"},
-            'version': {'passed': False, 'message': f"Error reading cover page: {str(e)}"}
+            'version': {'passed': False, 'message': f"Error reading cover page: {str(e)}"},
+            'etl_dates': {'passed': False, 'message': f"Error reading cover page: {str(e)}"}
         }
     
     test_results = {
         'title_spelling': {'passed': False, 'message': ''},
-        'version': {'passed': False, 'message': ''}
+        'version': {'passed': False, 'message': ''},
+        'etl_dates': {'passed': False, 'message': ''}
     }
     
     # Test 1: Check main title spelling
@@ -88,6 +90,52 @@ def test_cover_page(report_path, expected_version):
             else:
                 test_results['version']['message'] = f"Version mismatch. Expected: {expected_version}, Found: {found_version}"
             break
+    
+    # Test 3: Check ETL dates (started before completed)
+    etl_pattern = r"ETL - Started: (\d{2}-[A-Za-z]{3}-\d{4} \d{2}:\d{2}:\d{2} [AP]M); CM - Completed: (\d{2}-[A-Za-z]{3}-\d{4} \d{2}:\d{2}:\d{2} [AP]M)"
+    date_format = "%d-%b-%Y %I:%M:%S %p"
+    
+    # Check row 3 specifically (0-indexed row 2)
+    try:
+        row_3_content = cover_df.iloc[2].dropna().astype(str).str.cat(sep=' ')
+        match = re.search(etl_pattern, row_3_content)
+        
+        if match:
+            start_str, complete_str = match.groups()
+            try:
+                start_date = datetime.strptime(start_str, date_format)
+                complete_date = datetime.strptime(complete_str, date_format)
+                
+                if start_date < complete_date:
+                    test_results['etl_dates']['passed'] = True
+                    test_results['etl_dates']['message'] = f"ETL dates valid: Started {start_str} before Completed {complete_str}"
+                else:
+                    test_results['etl_dates']['message'] = f"ETL dates invalid: Started {start_str} NOT before Completed {complete_str}"
+            except ValueError:
+                test_results['etl_dates']['message'] = "Could not parse ETL dates"
+        else:
+            # If not found in row 3, search all content
+            for line in content:
+                match = re.search(etl_pattern, line)
+                if match:
+                    start_str, complete_str = match.groups()
+                    try:
+                        start_date = datetime.strptime(start_str, date_format)
+                        complete_date = datetime.strptime(complete_str, date_format)
+                        
+                        if start_date < complete_date:
+                            test_results['etl_dates']['passed'] = True
+                            test_results['etl_dates']['message'] = f"ETL dates valid: Started {start_str} before Completed {complete_str}"
+                        else:
+                            test_results['etl_dates']['message'] = f"ETL dates invalid: Started {start_str} NOT before Completed {complete_str}"
+                    except ValueError:
+                        test_results['etl_dates']['message'] = "Could not parse ETL dates"
+                    break
+            else:
+                test_results['etl_dates']['message'] = "ETL date pattern not found in cover page"
+                
+    except Exception as e:
+        test_results['etl_dates']['message'] = f"Error reading row 3: {str(e)}"
     
     return test_results
 
