@@ -277,6 +277,109 @@ def test_summary_report(design_spec_path, verification_path):
             'mismatches': mismatches
         }
 
+def test_specific_cases_dates(verification_path):
+    """Test specific case numbers and their corresponding dates in Standard 2 Report"""
+    try:
+        # Read Standard 2 Report
+        verification_df = pd.read_excel(verification_path, sheet_name="Standard 2 Report", header=1)
+        
+        # Clean column names by stripping whitespace
+        verification_df.columns = [str(col).strip() for col in verification_df.columns]
+        
+        # Specific case numbers to check
+        case_numbers_to_check = ['12891050', '13141575', '11739608', '13038729', '13155126']
+        
+        # Find the correct column names (case-insensitive search)
+        case_column = None
+        due_date_column = None
+        contact_log_column = None
+        
+        for col in verification_df.columns:
+            col_lower = col.lower()
+            if 'case' in col_lower and '#' in col_lower:
+                case_column = col
+            elif '30 day private visit due date' in col_lower and '2025' in col_lower:
+                due_date_column = col
+            elif '30 day private visit contact log start date' in col_lower and 'extension' in col_lower:
+                contact_log_column = col
+        
+        if not case_column:
+            return {
+                'passed': False,
+                'message': "Case # column not found in Standard 2 Report",
+                'details': []
+            }
+        
+        if not due_date_column:
+            return {
+                'passed': False,
+                'message': "30 Day Private Visit Due Date - 2025 column not found",
+                'details': []
+            }
+        
+        if not contact_log_column:
+            return {
+                'passed': False,
+                'message': "30 Day Private Visit Contact Log Start Date - Extension column not found",
+                'details': []
+            }
+        
+        # Filter rows for specific case numbers
+        filtered_df = verification_df[verification_df[case_column].astype(str).isin(case_numbers_to_check)]
+        
+        if len(filtered_df) == 0:
+            return {
+                'passed': False,
+                'message': f"None of the specified case numbers found in column '{case_column}'",
+                'details': []
+            }
+        
+        # Check if all case numbers are found
+        found_cases = filtered_df[case_column].astype(str).tolist()
+        missing_cases = [case for case in case_numbers_to_check if case not in found_cases]
+        
+        # Prepare results
+        details = []
+        for _, row in filtered_df.iterrows():
+            case_num = str(row[case_column])
+            due_date = row[due_date_column]
+            contact_log_date = row[contact_log_column]
+            
+            # Convert dates to string format for display
+            due_date_str = due_date.strftime('%Y-%m-%d') if pd.notna(due_date) and isinstance(due_date, (datetime, pd.Timestamp)) else str(due_date)
+            contact_log_str = contact_log_date.strftime('%Y-%m-%d') if pd.notna(contact_log_date) and isinstance(contact_log_date, (datetime, pd.Timestamp)) else str(contact_log_date)
+            
+            details.append({
+                'case_number': case_num,
+                'due_date': due_date_str,
+                'contact_log_date': contact_log_str,
+                'has_due_date': pd.notna(due_date),
+                'has_contact_log_date': pd.notna(contact_log_date)
+            })
+        
+        all_found = len(missing_cases) == 0
+        all_have_dates = all(detail['has_due_date'] and detail['has_contact_log_date'] for detail in details)
+        
+        message_parts = []
+        if not all_found:
+            message_parts.append(f"Missing cases: {', '.join(missing_cases)}")
+        if not all_have_dates:
+            message_parts.append("Some cases missing dates")
+        
+        return {
+            'passed': all_found and all_have_dates,
+            'message': "; ".join(message_parts) if message_parts else "All cases found with complete date information",
+            'details': details,
+            'missing_cases': missing_cases
+        }
+        
+    except Exception as e:
+        return {
+            'passed': False,
+            'message': f"Error testing specific cases: {str(e)}",
+            'details': []
+        }
+
 def test_sensitivity_and_formula():
     """Test sensitivity and business formula requirements"""
     test_results = {
@@ -331,6 +434,20 @@ def run_all_cq091_tests(design_spec_path, verification_path, expected_version):
         
         print()  # Line space after each standard
     
+    # Run specific cases test
+    print("\n=== Specific Cases Test (Standard 2 Report) ===")
+    cases_result = test_specific_cases_dates(verification_path)
+    status = "PASSED" if cases_result['passed'] else "FAILED"
+    print(f"SPECIFIC_CASES: {status} - {cases_result['message']}")
+    
+    if not cases_result['passed'] and 'missing_cases' in cases_result and cases_result['missing_cases']:
+        print(f"  • Missing cases: {', '.join(cases_result['missing_cases'])}")
+    
+    if 'details' in cases_result and cases_result['details']:
+        print("\n  Case Details:")
+        for detail in cases_result['details']:
+            print(f"  • Case {detail['case_number']}: Due Date={detail['due_date']}, Contact Log Date={detail['contact_log_date']}")
+    
     # Run summary report test
     print("\n=== Summary Report Test ===")
     summary_result = test_summary_report(design_spec_path, verification_path)
@@ -357,11 +474,12 @@ def run_all_cq091_tests(design_spec_path, verification_path, expected_version):
     # Calculate overall status
     cover_passed = all(r['passed'] for r in cover_results.values())
     standards_passed = all(result['passed'] for result in standard_results)
+    cases_passed = cases_result['passed']
     summary_passed = summary_result['passed']
     sensitivity_passed = all(r['passed'] for r in sensitivity_results.values())
     contact_passed = contact_result['passed']
     
-    all_passed = cover_passed and standards_passed and summary_passed and sensitivity_passed and contact_passed
+    all_passed = cover_passed and standards_passed and cases_passed and summary_passed and sensitivity_passed and contact_passed
     
     print("\n" + "=" * 80)
     print("=== FINAL RESULT ===")
@@ -388,6 +506,16 @@ def run_all_cq091_tests(design_spec_path, verification_path, expected_version):
                         print(f"  • Column {detail['column_number']}: {detail['error_type']}")
                         print(f"    Design: '{detail['design']}'")
                         print(f"    Verification: '{detail['verification']}'")
+        
+        # Specific cases errors
+        if not cases_passed:
+            print("\nSpecific Cases Errors:")
+            if 'missing_cases' in cases_result and cases_result['missing_cases']:
+                print(f"  • Missing case numbers: {', '.join(cases_result['missing_cases'])}")
+            if 'details' in cases_result:
+                for detail in cases_result['details']:
+                    if not detail['has_due_date'] or not detail['has_contact_log_date']:
+                        print(f"  • Case {detail['case_number']}: Missing Due Date={not detail['has_due_date']}, Missing Contact Log Date={not detail['has_contact_log_date']}")
         
         # Summary report errors
         if not summary_passed:
