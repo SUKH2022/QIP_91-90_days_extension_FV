@@ -6,7 +6,7 @@
 This professional Python automation tool provides comprehensive verification of CQ091 reports against design specifications, ensuring data integrity and compliance across your organization.  
 Stop manual checking and start automated validation!
 
-![Cover Page Analysis](screenshot\Cover_Page_Analysis.png)
+![Cover Page Analysis](screenshot/Cover_Page_Analysis.png)
 
 ---
 
@@ -75,7 +75,7 @@ CQ091_Verification_Tool
     - Standard 3 Report (90-day visits)
     - Advanced difference detection with similarity scoring
 
-![Column Issues](screenshot\Column_Issues.png)
+![Column Issues](screenshot/Column_Issues.png)
 
 
 
@@ -162,7 +162,7 @@ Generate comprehensive Excel reports with:
 - ⚙️ Priority-based Issue Tracking
 - 👥 Team-specific Action Items
 
-![Correction Guide](screenshot\Correction_Guide.png)
+![Correction Guide](screenshot/Correction_Guide.png)
 
 ```bash
 # Generate professional report
