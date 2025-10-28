@@ -4,6 +4,33 @@ from datetime import datetime
 import os
 from difflib import SequenceMatcher
 
+def get_version_from_design_spec(design_spec_path):
+    """Extract version from cell C3 of the General sheet in design spec"""
+    try:
+        # Read the General sheet
+        general_df = pd.read_excel(design_spec_path, sheet_name='General', header=None)
+        
+        # Get value from cell C3 (0-indexed: row 2, column 2)
+        version_value = general_df.iloc[2, 2]  # Row 3, Column C
+        
+        # Clean and extract version number
+        if pd.notna(version_value):
+            version_str = str(version_value).strip()
+            # Extract version number using regex (looking for patterns like 1.0, 1.1, 2.3, etc.)
+            version_match = re.search(r'(\d+\.\d+)', version_str)
+            if version_match:
+                return version_match.group(1)
+            else:
+                print(f"⚠️  Could not extract version number from: '{version_str}'")
+                return None
+        else:
+            print("❌ Version cell C3 is empty in General sheet")
+            return None
+            
+    except Exception as e:
+        print(f"❌ Error reading version from design spec: {str(e)}")
+        return None
+
 def analyze_difference(design_col, verification_col):
     """Analyze the difference between two column names and provide detailed explanation"""
     
@@ -403,73 +430,92 @@ def test_contact_log_requirements():
         'message': f"Contact log requirements verified:\n{requirements}"
     }
 
-def run_all_cq091_tests(design_spec_path, verification_path, expected_version):
+def run_all_cq091_tests(design_spec_path, verification_path):
     """Run all tests for CQ091 report verification"""
-    print(f"Running CQ091 verification tests")
-    print(f"Design Spec: {design_spec_path}")
-    print(f"Verification Report: {verification_path}")
-    print(f"Expected version: {expected_version}")
+    
+    # Get version from design spec
+    print("🔍 Extracting version from design spec...")
+    expected_version = get_version_from_design_spec(design_spec_path)
+    
+    if expected_version is None:
+        print("❌ Could not extract version from design spec. Using fallback version 1.0")
+        expected_version = "1.0"  # Fallback version
+    
+    print(f"📋 Expected version from design spec: {expected_version}")
+    
+    print(f"\n🎯 Running CQ091 verification tests")
+    print(f"📁 Design Spec: {os.path.basename(design_spec_path)}")
+    print(f"📊 Verification Report: {os.path.basename(verification_path)}")
+    print(f"🔖 Expected version: {expected_version}")
     print("=" * 80)
     
     # Run cover page tests
-    print("\n=== Cover Page Tests ===")
+    print("\n📄 === Cover Page Tests ===")
     cover_results = test_cover_page(verification_path, expected_version)
     for test_name, result in cover_results.items():
-        status = "PASSED" if result['passed'] else "FAILED"
-        print(f"{test_name.upper()}: {status} - {result['message']}")
+        status_icon = "✅" if result['passed'] else "❌"
+        status_text = "PASSED" if result['passed'] else "FAILED"
+        print(f"{status_icon} {test_name.upper()}: {status_text} - {result['message']}")
     
     # Run standard report tests for each standard
-    print("\n=== Standard Report Column Tests ===")
+    print("\n📊 === Standard Report Column Tests ===")
     standard_results = []
     for standard_num in [1, 2, 3]:
         result = test_standard_report_columns(design_spec_path, verification_path, standard_num)
         standard_results.append(result)
         
-        status = "PASSED" if result['passed'] else "FAILED"
-        print(f"\nSTANDARD {standard_num}: {status} - {result['message']}")
+        status_icon = "✅" if result['passed'] else "❌"
+        status_text = "PASSED" if result['passed'] else "FAILED"
+        print(f"\n{status_icon} STANDARD {standard_num}: {status_text} - {result['message']}")
         
         if not result['passed'] and 'mismatches' in result:
             for mismatch in result['mismatches']:
-                print(f"  • {mismatch}")
+                print(f"  ⚠️  {mismatch}")
         
         print()  # Line space after each standard
     
     # Run specific cases test
-    print("\n=== Specific Cases Test (Standard 2 Report) ===")
+    print("\n🔍 === Specific Cases Test (Standard 2 Report) ===")
     cases_result = test_specific_cases_dates(verification_path)
-    status = "PASSED" if cases_result['passed'] else "FAILED"
-    print(f"SPECIFIC_CASES: {status} - {cases_result['message']}")
+    status_icon = "✅" if cases_result['passed'] else "❌"
+    status_text = "PASSED" if cases_result['passed'] else "FAILED"
+    print(f"{status_icon} SPECIFIC_CASES: {status_text} - {cases_result['message']}")
     
     if not cases_result['passed'] and 'missing_cases' in cases_result and cases_result['missing_cases']:
-        print(f"  • Missing cases: {', '.join(cases_result['missing_cases'])}")
+        print(f"  ⚠️  Missing cases: {', '.join(cases_result['missing_cases'])}")
     
     if 'details' in cases_result and cases_result['details']:
-        print("\n  Case Details:")
+        print("\n  📋 Case Details:")
         for detail in cases_result['details']:
-            print(f"  • Case {detail['case_number']}: Due Date={detail['due_date']}, Contact Log Date={detail['contact_log_date']}")
+            due_icon = "✅" if detail['has_due_date'] else "❌"
+            contact_icon = "✅" if detail['has_contact_log_date'] else "❌"
+            print(f"  • Case {detail['case_number']}: {due_icon} Due Date={detail['due_date']}, {contact_icon} Contact Log Date={detail['contact_log_date']}")
     
     # Run summary report test
-    print("\n=== Summary Report Test ===")
+    print("\n📈 === Summary Report Test ===")
     summary_result = test_summary_report(design_spec_path, verification_path)
-    status = "PASSED" if summary_result['passed'] else "FAILED"
-    print(f"SUMMARY: {status} - {summary_result['message']}")
+    status_icon = "✅" if summary_result['passed'] else "❌"
+    status_text = "PASSED" if summary_result['passed'] else "FAILED"
+    print(f"{status_icon} SUMMARY: {status_text} - {summary_result['message']}")
     
     if not summary_result['passed'] and 'mismatches' in summary_result:
         for mismatch in summary_result['mismatches']:
-            print(f"  • {mismatch}")
+            print(f"  ⚠️  {mismatch}")
     
     # Run sensitivity and formula tests
-    print("\n=== Sensitivity and Formula Tests ===")
+    print("\n⚡ === Sensitivity and Formula Tests ===")
     sensitivity_results = test_sensitivity_and_formula()
     for test_name, result in sensitivity_results.items():
-        status = "PASSED" if result['passed'] else "FAILED"
-        print(f"{test_name.upper()}: {status} - {result['message']}")
+        status_icon = "✅" if result['passed'] else "❌"
+        status_text = "PASSED" if result['passed'] else "FAILED"
+        print(f"{status_icon} {test_name.upper()}: {status_text} - {result['message']}")
     
     # Run contact log requirements test
-    print("\n=== Contact Log Requirements Test ===")
+    print("\n📝 === Contact Log Requirements Test ===")
     contact_result = test_contact_log_requirements()
-    status = "PASSED" if contact_result['passed'] else "FAILED"
-    print(f"CONTACT_LOG: {status} - {contact_result['message']}")
+    status_icon = "✅" if contact_result['passed'] else "❌"
+    status_text = "PASSED" if contact_result['passed'] else "FAILED"
+    print(f"{status_icon} CONTACT_LOG: {status_text} - {contact_result['message']}")
     
     # Calculate overall status
     cover_passed = all(r['passed'] for r in cover_results.values())
@@ -482,48 +528,65 @@ def run_all_cq091_tests(design_spec_path, verification_path, expected_version):
     all_passed = cover_passed and standards_passed and cases_passed and summary_passed and sensitivity_passed and contact_passed
     
     print("\n" + "=" * 80)
-    print("=== FINAL RESULT ===")
-    print("ALL CQ091 TESTS PASSED" if all_passed else "SOME CQ091 TESTS FAILED")
+    print("🎯 === FINAL RESULT ===")
+    if all_passed:
+        print("✅ ALL CQ091 TESTS PASSED")
+    else:
+        print("❌ SOME CQ091 TESTS FAILED")
     
     # Generate detailed error report
     if not all_passed:
-        print("\n=== DETAILED ERROR ANALYSIS ===")
+        print("\n🔍 === DETAILED ERROR ANALYSIS ===")
         
         # Cover page errors
         if not cover_passed:
-            print("\nCover Page Errors:")
+            print("\n📄 Cover Page Errors:")
             for test_name, result in cover_results.items():
                 if not result['passed']:
-                    print(f"  • {test_name}: {result['message']}")
+                    print(f"  ❌ {test_name}: {result['message']}")
         
         # Standard report errors
         if not standards_passed:
-            print("\nStandard Report Errors:")
+            print("\n📊 Standard Report Errors:")
             for i, result in enumerate(standard_results, 1):
                 if not result['passed']:
-                    print(f"\nStandard {i}:")
+                    print(f"\n  📋 Standard {i}:")
                     for detail in result.get('details', []):
-                        print(f"  • Column {detail['column_number']}: {detail['error_type']}")
-                        print(f"    Design: '{detail['design']}'")
-                        print(f"    Verification: '{detail['verification']}'")
+                        print(f"    ❌ Column {detail['column_number']}: {detail['error_type']}")
+                        print(f"       Design: '{detail['design']}'")
+                        print(f"       Verification: '{detail['verification']}'")
         
         # Specific cases errors
         if not cases_passed:
-            print("\nSpecific Cases Errors:")
+            print("\n🔍 Specific Cases Errors:")
             if 'missing_cases' in cases_result and cases_result['missing_cases']:
-                print(f"  • Missing case numbers: {', '.join(cases_result['missing_cases'])}")
+                print(f"  ❌ Missing case numbers: {', '.join(cases_result['missing_cases'])}")
             if 'details' in cases_result:
                 for detail in cases_result['details']:
                     if not detail['has_due_date'] or not detail['has_contact_log_date']:
-                        print(f"  • Case {detail['case_number']}: Missing Due Date={not detail['has_due_date']}, Missing Contact Log Date={not detail['has_contact_log_date']}")
+                        print(f"  ❌ Case {detail['case_number']}: Missing Due Date={not detail['has_due_date']}, Missing Contact Log Date={not detail['has_contact_log_date']}")
         
         # Summary report errors
         if not summary_passed:
-            print("\nSummary Report Errors:")
+            print("\n📈 Summary Report Errors:")
             for detail in summary_result.get('details', []):
-                print(f"  • Row {detail['row_number']}: {detail['error_type']}")
-                print(f"    Design: '{detail['design']}'")
-                print(f"    Verification: '{detail['verification']}'")
+                print(f"  ❌ Row {detail['row_number']}: {detail['error_type']}")
+                print(f"     Design: '{detail['design']}'")
+                print(f"     Verification: '{detail['verification']}'")
+    
+    # Print summary statistics
+    total_tests = 6  # cover + 3 standards + cases + summary + sensitivity + contact
+    passed_tests = sum([
+        cover_passed,
+        standards_passed,
+        cases_passed,
+        summary_passed,
+        sensitivity_passed,
+        contact_passed
+    ])
+    
+    success_rate = (passed_tests / total_tests) * 100
+    print(f"\n📊 TEST SUMMARY: {passed_tests}/{total_tests} tests passed ({success_rate:.1f}%)")
     
     return all_passed
 
@@ -533,144 +596,19 @@ if __name__ == "__main__":
     design_spec_path = r"D:\work\college_work\Coop_1\ops_work\report2\CQ091 - Design Spec - QIP9.KS2 - Seven Day Visit 2025.xlsx"
     verification_path = r"D:\work\college_work\Coop_1\ops_work\report2\Final verification-CQ091 - QIP 9, 11 - KS2 - Private Visits - Kinship Service_Children in Care.xlsx"
     
-    # Expected version
-    expected_version = "1.3"
-    
     # Check if files exist
     if not os.path.exists(design_spec_path):
-        print(f"Error: Design spec file not found at {design_spec_path}")
+        print(f"❌ Error: Design spec file not found at {design_spec_path}")
     elif not os.path.exists(verification_path):
-        print(f"Error: Verification file not found at {verification_path}")
+        print(f"❌ Error: Verification file not found at {verification_path}")
     else:
+        print("🚀 Starting CQ091 Automated Verification...")
+        print("📍 Reading version from design spec automatically...")
+        
         # Run all tests
-        run_all_cq091_tests(design_spec_path, verification_path, expected_version)
-
-'''
-Running CQ091 verification tests
-Design Spec: D:\work\college_work\Coop_1\ops_work\report2\CQ091 - Design Spec - QIP9.KS2 - Seven Day Visit 2025.xlsx
-Verification Report: D:\work\college_work\Coop_1\ops_work\report2\Final verification-CQ091 - QIP 9, 11 - KS2 - Private Visits - Kinship Service_Children in Care.xlsx
-Expected version: 1.3
-================================================================================
-
-=== Cover Page Tests ===
-TITLE_SPELLING: PASSED - Title spelled correctly: 'CQ091 - QIP 9, 11 - KS2 - Kinship Service/Child in Care'
-VERSION: FAILED - Version mismatch. Expected: 1.3, Found: 1.20
-ETL_DATES: PASSED - ETL dates valid: Started 11-Sep-2025 11:31:51 PM before Completed 12-Sep-2025 07:30:33 AM
-
-=== Standard Report Column Tests ===
-
-STANDARD 1: PASSED - Standard 1 columns match perfectly
-
-
-STANDARD 2: FAILED - Standard 2 column differences found
-  • Column 20: Spelling error (similarity: 0.98) - Design='Case Closure Submsission Date' vs Verification='Case Closure Submission Date'
-  • Column 33: Content difference - Design='30 Day Private Visit Contact Log Start Date - 
-Director Approval Received' vs Verification='30 Day Private Visit Contact Log Start Date - Regular - 2025'
-  • Column 34: Spelling error (similarity: 0.83) - Design='30 Day Private Visit Contact Log Start Date - Regular - 2025' vs Verification='30 Day Private Visit Contact Log Method - Regular'
-  • Column 35: Spelling error (similarity: 0.90) - Design='30 Day Private Visit Contact Log Method - Regular' vs Verification='30 Day Private Visit Contact Log Location - Regular'
-  • Column 36: Content difference - Design='30 Day Private Visit Contact Log Location - Regular' vs Verification='30 Day Private Visit Exclusion - Closed Prior to Due Date'
-  • Column 37: Content difference - Design='30 Day Private Visit Exclusion - Closed Prior to Due Date' vs Verification='30 Day Private Visit Compliant'
-  • Column 38: Content difference - Design='30 Day Private Visit Compliant' vs Verification='Incorrect Change Reason'
-  • Column count mismatch: Design=39, Verification=38
-
-
-STANDARD 3: FAILED - Standard 3 column differences found
-  • Column 7: Space difference (extra/missing spaces) - Design='Case Owner  First Name' vs Verification='Case Owner First Name'
-  • Column 20: Spelling error (similarity: 0.98) - Design='Case Closure Submsission Date' vs Verification='Case Closure Submission Date'
-  • Column 33: Content difference - Design='30 Day Private Visit Contact Log Start Date - Director Approval Received' vs Verification='90 Day Visit Contact Log Start Date - Regular - 2025'
-  • Column 34: Content difference - Design='90 Day Visit Contact Log Start Date - Regular - 2025' vs Verification='90 Day Visit Exclusion - Closed Prior to Due Date'
-  • Column 35: Content difference - Design='90 Day Visit Exclusion - Closed Prior to Due Date' vs Verification='90 Day Visit Compliant'
-  • Column 36: Content difference - Design='90 Day Visit Compliant' vs Verification='Incorrect Change Reason'
-  • Column count mismatch: Design=37, Verification=36
-
-
-=== Specific Cases Test (Standard 2 Report) ===
-SPECIFIC_CASES: FAILED - Some cases missing dates
-
-  Case Details:
-  • Case 12891050: Due Date=2025-01-13, Contact Log Date=NaT
-  • Case 12891050: Due Date=2025-02-12, Contact Log Date=NaT
-  • Case 12891050: Due Date=2025-03-14, Contact Log Date=NaT
-  • Case 12891050: Due Date=2025-04-13, Contact Log Date=2025-04-01
-  • Case 13141575: Due Date=2025-01-15, Contact Log Date=2025-01-01
-  • Case 11739608: Due Date=2025-01-06, Contact Log Date=2024-12-27
-  • Case 13038729: Due Date=2025-01-02, Contact Log Date=2024-12-25
-  • Case 13155126: Due Date=2025-01-03, Contact Log Date=2024-12-25
-
-=== Summary Report Test ===
-SUMMARY: PASSED - Summary report fields match perfectly
-
-=== Sensitivity and Formula Tests ===
-SENSITIVITY: PASSED - Sensitivity: high (as required)
-FORMULA: PASSED - Business formula verified: '90 Day Visit Due Date' - 'Contact Log Buffer Days' <= Minimum Contact Log Start Date <= '90 Day Visit Due Date'
-
-=== Contact Log Requirements Test ===
-CONTACT_LOG: PASSED - Contact log requirements verified:
-{'report_field_name': '90 Day Private Visit Contact Log Start Date - Extension', 'type': 'Supervision', 'purpose_options': ['Extension of Visit - 30 Day - Private', 'Extension of Visit - 90 Day - Private'], 'concerning': 'Primary Client'}
-
-================================================================================
-=== FINAL RESULT ===
-SOME CQ091 TESTS FAILED
-
-=== DETAILED ERROR ANALYSIS ===
-
-Cover Page Errors:
-  • version: Version mismatch. Expected: 1.3, Found: 1.20
-
-Standard Report Errors:
-
-Standard 2:
-  • Column 20: Spelling error (similarity: 0.98)
-    Design: 'Case Closure Submsission Date'
-    Verification: 'Case Closure Submission Date'
-  • Column 33: Content difference
-    Design: '30 Day Private Visit Contact Log Start Date -
-Director Approval Received'
-    Verification: '30 Day Private Visit Contact Log Start Date - Regular - 2025'
-  • Column 34: Spelling error (similarity: 0.83)
-    Design: '30 Day Private Visit Contact Log Start Date - Regular - 2025'
-    Verification: '30 Day Private Visit Contact Log Method - Regular'
-  • Column 35: Spelling error (similarity: 0.90)
-    Design: '30 Day Private Visit Contact Log Method - Regular'
-    Verification: '30 Day Private Visit Contact Log Location - Regular'
-  • Column 36: Content difference
-    Design: '30 Day Private Visit Contact Log Location - Regular'
-    Verification: '30 Day Private Visit Exclusion - Closed Prior to Due Date'
-  • Column 37: Content difference
-    Design: '30 Day Private Visit Exclusion - Closed Prior to Due Date'
-    Verification: '30 Day Private Visit Compliant'
-  • Column 38: Content difference
-    Design: '30 Day Private Visit Compliant'
-    Verification: 'Incorrect Change Reason'
-  • Column N/A: Column count mismatch
-    Design: 'Total columns: 39'
-    Verification: 'Total columns: 38'
-
-Standard 3:
-  • Column 7: Space difference (extra/missing spaces)
-    Design: 'Case Owner  First Name'
-    Verification: 'Case Owner First Name'
-  • Column 20: Spelling error (similarity: 0.98)
-    Design: 'Case Closure Submsission Date'
-    Verification: 'Case Closure Submission Date'
-  • Column 33: Content difference
-    Design: '30 Day Private Visit Contact Log Start Date - Director Approval Received'
-    Verification: '90 Day Visit Contact Log Start Date - Regular - 2025'
-  • Column 34: Content difference
-    Design: '90 Day Visit Contact Log Start Date - Regular - 2025'
-    Verification: '90 Day Visit Exclusion - Closed Prior to Due Date'
-  • Column 35: Content difference
-    Design: '90 Day Visit Exclusion - Closed Prior to Due Date'
-    Verification: '90 Day Visit Compliant'
-  • Column 36: Content difference
-    Design: '90 Day Visit Compliant'
-    Verification: 'Incorrect Change Reason'
-  • Column N/A: Column count mismatch
-    Design: 'Total columns: 37'
-    Verification: 'Total columns: 36'
-
-Specific Cases Errors:
-  • Case 12891050: Missing Due Date=False, Missing Contact Log Date=True
-  • Case 12891050: Missing Due Date=False, Missing Contact Log Date=True
-  • Case 12891050: Missing Due Date=False, Missing Contact Log Date=True
-'''
+        success = run_all_cq091_tests(design_spec_path, verification_path)
+        
+        if success:
+            print("\n🎉 Verification completed successfully! All tests passed!")
+        else:
+            print("\n⚠️  Verification completed with errors. Please review the detailed report above.")
